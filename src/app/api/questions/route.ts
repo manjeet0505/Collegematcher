@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
   if (!title || !collegeId) return NextResponse.json({ error: "title and collegeId required" }, { status: 400 })
   const q = await db.question.create({
     data: { title, body: body || "", collegeId, userId: (session.user as { id: string }).id },
-    include: { user: { select: { name: true } }, answers: [] },
+    include: { user: { select: { name: true } } },
   })
-  return NextResponse.json(q)
+  return NextResponse.json({ ...q, answers: [] })
 }
