@@ -1,5 +1,5 @@
 ﻿"use client"
-import { useEffect, useState } from "react"
+import { use, useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -20,7 +20,8 @@ interface College {
 const TABS = ["Overview", "Courses", "Placements", "Reviews"] as const
 type Tab = typeof TABS[number]
 
-export default function CollegeDetailPage({ params }: { params: { id: string } }) {
+export default function CollegeDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const { data: session } = useSession()
   const router = useRouter()
   const [college, setCollege] = useState<College | null>(null)
@@ -30,10 +31,10 @@ export default function CollegeDetailPage({ params }: { params: { id: string } }
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`/api/colleges/${params.id}`)
+    fetch(`/api/colleges/${id}`)
       .then(r => r.json())
       .then(data => { setCollege(data); setLoading(false) })
-  }, [params.id])
+  }, [id])
 
   useEffect(() => {
     if (!session || !college) return
@@ -45,9 +46,9 @@ export default function CollegeDetailPage({ params }: { params: { id: string } }
   async function toggleSave() {
     if (!session) { router.push("/login"); return }
     setSaving(true)
-    const method = saved ? "DELETE" : "POST"
     await fetch("/api/saved", {
-      method, headers: { "Content-Type": "application/json" },
+      method: saved ? "DELETE" : "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ collegeId: college!.id }),
     })
     setSaved(!saved)
@@ -72,7 +73,7 @@ export default function CollegeDetailPage({ params }: { params: { id: string } }
       <Navbar />
       <div style={{ maxWidth: 960, margin: "0 auto", padding: "88px 16px 0" }}>
 
-        {/* Hero */}
+        {/* Hero card */}
         <div style={{ borderRadius: 24, overflow: "hidden", marginBottom: 24, background: "rgba(13,18,33,0.95)", border: "1px solid rgba(255,255,255,0.07)" }}>
           {college.imageUrl && (
             <div style={{ height: 220, overflow: "hidden", position: "relative" }}>
@@ -81,7 +82,6 @@ export default function CollegeDetailPage({ params }: { params: { id: string } }
             </div>
           )}
           <div style={{ padding: "28px 28px 24px" }}>
-            {/* Badges */}
             <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
               {college.nirfRank && (
                 <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 8, background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)", color: "#F59E0B" }}>
@@ -97,14 +97,12 @@ export default function CollegeDetailPage({ params }: { params: { id: string } }
               </span>
             </div>
 
-            {/* Title row */}
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
               <div>
                 <h1 style={{ fontSize: 28, fontWeight: 900, color: "#f1f5f9", marginBottom: 6, letterSpacing: "-0.5px" }}>{college.name}</h1>
                 <p style={{ fontSize: 14, color: "#475569" }}>{college.city}, {college.state}</p>
               </div>
-              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                {/* Save button */}
+              <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
                 <button onClick={toggleSave} disabled={saving}
                   style={{
                     display: "flex", alignItems: "center", gap: 7,
@@ -130,10 +128,10 @@ export default function CollegeDetailPage({ params }: { params: { id: string } }
         {/* Stats bar */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 12, marginBottom: 24 }}>
           {[
-            { label: "Total Fees",   value: formatFees(college.totalFees) },
-            { label: "Avg Package",  value: formatPackage(college.placementAvg) },
-            { label: "Placement %",  value: college.placementPercent + "%" },
-            { label: "Established",  value: String(college.establishedYear) },
+            { label: "Total Fees",  value: formatFees(college.totalFees) },
+            { label: "Avg Package", value: formatPackage(college.placementAvg) },
+            { label: "Placement %", value: college.placementPercent + "%" },
+            { label: "Established", value: String(college.establishedYear) },
           ].map(s => (
             <div key={s.label} style={{ borderRadius: 16, padding: "18px 20px", background: "rgba(13,18,33,0.9)", border: "1px solid rgba(255,255,255,0.07)", textAlign: "center" }}>
               <div style={{ fontSize: 12, color: "#475569", marginBottom: 6 }}>{s.label}</div>
@@ -158,8 +156,8 @@ export default function CollegeDetailPage({ params }: { params: { id: string } }
           ))}
         </div>
 
-        {/* Tab content */}
-        <div style={{ borderRadius: 20, padding: "24px 24px", background: "rgba(13,18,33,0.9)", border: "1px solid rgba(255,255,255,0.07)" }}>
+        {/* Tab panels */}
+        <div style={{ borderRadius: 20, padding: "24px", background: "rgba(13,18,33,0.9)", border: "1px solid rgba(255,255,255,0.07)" }}>
 
           {tab === "Overview" && (
             <div>
@@ -195,21 +193,20 @@ export default function CollegeDetailPage({ params }: { params: { id: string } }
           {tab === "Courses" && (
             <div>
               <div style={{ fontSize: 13, fontWeight: 700, color: "#64748b", marginBottom: 16, letterSpacing: "0.05em" }}>ALL COURSES</div>
-              {college.courses.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "40px 0", color: "#475569" }}>No courses listed yet</div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {college.courses.map(c => (
-                    <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 18px", borderRadius: 14, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", flexWrap: "wrap", gap: 10 }}>
-                      <div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0", marginBottom: 3 }}>{c.name}</div>
-                        <div style={{ fontSize: 12, color: "#475569" }}>{c.duration} &bull; {c.seats} seats</div>
+              {college.courses.length === 0
+                ? <div style={{ textAlign: "center", padding: "40px 0", color: "#475569" }}>No courses listed yet</div>
+                : <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {college.courses.map(c => (
+                      <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 18px", borderRadius: 14, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", flexWrap: "wrap", gap: 10 }}>
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0", marginBottom: 3 }}>{c.name}</div>
+                          <div style={{ fontSize: 12, color: "#475569" }}>{c.duration} &bull; {c.seats} seats</div>
+                        </div>
+                        <div style={{ fontSize: 15, fontWeight: 800, color: "#818CF8" }}>{formatFees(c.fees)}</div>
                       </div>
-                      <div style={{ fontSize: 15, fontWeight: 800, color: "#818CF8" }}>{formatFees(c.fees)}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+              }
             </div>
           )}
 
@@ -218,9 +215,9 @@ export default function CollegeDetailPage({ params }: { params: { id: string } }
               <div style={{ fontSize: 13, fontWeight: 700, color: "#64748b", marginBottom: 16, letterSpacing: "0.05em" }}>PLACEMENT STATS</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 14 }}>
                 {[
-                  { label: "Placement Rate", value: college.placementPercent + "%", color: "#34D399" },
-                  { label: "Avg Package",    value: formatPackage(college.placementAvg), color: "#818CF8" },
-                  { label: "Highest Package",value: formatPackage(college.placementHighest), color: "#F59E0B" },
+                  { label: "Placement Rate",  value: college.placementPercent + "%",          color: "#34D399" },
+                  { label: "Avg Package",     value: formatPackage(college.placementAvg),     color: "#818CF8" },
+                  { label: "Highest Package", value: formatPackage(college.placementHighest), color: "#F59E0B" },
                 ].map(s => (
                   <div key={s.label} style={{ padding: "22px 20px", borderRadius: 16, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", textAlign: "center" }}>
                     <div style={{ fontSize: 26, fontWeight: 900, color: s.color, marginBottom: 6 }}>{s.value}</div>
@@ -234,25 +231,23 @@ export default function CollegeDetailPage({ params }: { params: { id: string } }
           {tab === "Reviews" && (
             <div>
               <div style={{ fontSize: 13, fontWeight: 700, color: "#64748b", marginBottom: 16, letterSpacing: "0.05em" }}>STUDENT REVIEWS</div>
-              {college.reviews.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "40px 0", color: "#475569" }}>No reviews yet</div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  {college.reviews.map(r => (
-                    <div key={r.id} style={{ padding: "18px 20px", borderRadius: 14, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                        <div style={{ fontWeight: 700, color: "#e2e8f0", fontSize: 13 }}>{r.author}</div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          <span style={{ fontSize: 13, fontWeight: 800, color: "#34D399" }}>{r.rating.toFixed(1)}</span>
-                          <span style={{ fontSize: 11, color: "#334155" }}>/ 5.0</span>
-                          <span style={{ fontSize: 11, color: "#334155", marginLeft: 4 }}>{r.year}</span>
+              {college.reviews.length === 0
+                ? <div style={{ textAlign: "center", padding: "40px 0", color: "#475569" }}>No reviews yet</div>
+                : <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    {college.reviews.map(r => (
+                      <div key={r.id} style={{ padding: "18px 20px", borderRadius: 14, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                          <div style={{ fontWeight: 700, color: "#e2e8f0", fontSize: 13 }}>{r.author}</div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <span style={{ fontSize: 13, fontWeight: 800, color: "#34D399" }}>{r.rating.toFixed(1)}</span>
+                            <span style={{ fontSize: 11, color: "#334155" }}>/ 5.0 &bull; {r.year}</span>
+                          </div>
                         </div>
+                        <p style={{ fontSize: 13, color: "#64748b", lineHeight: 1.65 }}>{r.comment}</p>
                       </div>
-                      <p style={{ fontSize: 13, color: "#64748b", lineHeight: 1.65 }}>{r.comment}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+              }
             </div>
           )}
         </div>

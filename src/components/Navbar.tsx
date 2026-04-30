@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import Link from "next/link"
 import { useSession, signOut } from "next-auth/react"
 
@@ -21,6 +21,7 @@ export default function Navbar() {
         <div className="hidden sm:flex items-center gap-1">
           <Link href="/" className="text-slate-400 hover:text-white transition-colors text-sm px-3 py-2 rounded-lg hover:bg-white/5">Colleges</Link>
           <Link href="/compare" className="text-slate-400 hover:text-white transition-colors text-sm px-3 py-2 rounded-lg hover:bg-white/5">Compare</Link>
+          <Link href="/qa" className="text-slate-400 hover:text-white transition-colors text-sm px-3 py-2 rounded-lg hover:bg-white/5">Q&amp;A</Link>
           {session && (
             <Link href="/dashboard" className="text-slate-400 hover:text-white transition-colors text-sm px-3 py-2 rounded-lg hover:bg-white/5">Dashboard</Link>
           )}
