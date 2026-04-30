@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { formatFees, getRatingColor, getTypeColor } from '@/lib/utils'
+import CompareButton from './CompareButton'
 
 interface College {
   id: string
@@ -19,19 +20,17 @@ interface College {
 
 export default function CollegeCard({ college }: { college: College }) {
   return (
-    <Link href={`/colleges/${college.id}`} className="block group">
-      <div
-        className="relative rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
-        style={{
-          backgroundColor: 'rgba(13,18,33,0.95)',
-          border: '1px solid rgba(255,255,255,0.07)',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
-        }}
-      >
-        {/* Hover top accent line */}
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
+    <div
+      className="relative rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl group"
+      style={{
+        backgroundColor: 'rgba(13,18,33,0.95)',
+        border: '1px solid rgba(255,255,255,0.07)',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+      }}
+    >
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
 
-        {/* Image / Monogram */}
+      <Link href={`/colleges/${college.id}`} className="block">
         <div className="relative h-36 overflow-hidden" style={{ backgroundColor: '#080B14' }}>
           {college.imageUrl ? (
             <img
@@ -47,26 +46,17 @@ export default function CollegeCard({ college }: { college: College }) {
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-
-          {/* NIRF Rank badge */}
           <div
             className="absolute top-3 left-3 text-xs font-bold text-slate-200 px-2.5 py-1 rounded-lg"
-            style={{
-              backgroundColor: 'rgba(0,0,0,0.6)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              backdropFilter: 'blur(4px)',
-            }}
+            style={{ backgroundColor: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(4px)' }}
           >
             {college.nirfRank ? `#${college.nirfRank} NIRF` : 'Unranked'}
           </div>
-
-          {/* Type badge */}
           <div className={`absolute top-3 right-3 text-xs font-medium px-2.5 py-1 rounded-lg border ${getTypeColor(college.type)}`}>
             {college.type}
           </div>
         </div>
 
-        {/* Body */}
         <div className="p-4">
           <h3 className="font-semibold text-slate-100 text-sm leading-snug mb-1 line-clamp-2 group-hover:text-indigo-300 transition-colors duration-200">
             {college.name}
@@ -78,21 +68,14 @@ export default function CollegeCard({ college }: { college: College }) {
             </svg>
             <p className="text-slate-500 text-xs truncate">{college.city}, {college.state}</p>
           </div>
-
-          {/* Stats */}
-          <div
-            className="flex items-center justify-between pt-3"
-            style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
-          >
+          <div className="flex items-center justify-between pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
             <div>
               <p className="text-slate-500 text-xs mb-0.5">Fees/yr</p>
               <p className="text-slate-200 text-sm font-semibold">{formatFees(college.totalFees)}</p>
             </div>
             <div className="text-center">
               <p className="text-slate-500 text-xs mb-0.5">Rating</p>
-              <p className={`text-sm font-bold ${getRatingColor(college.rating)}`}>
-                ★ {college.rating.toFixed(1)}
-              </p>
+              <p className={`text-sm font-bold ${getRatingColor(college.rating)}`}>★ {college.rating.toFixed(1)}</p>
             </div>
             <div className="text-right">
               <p className="text-slate-500 text-xs mb-0.5">NAAC</p>
@@ -100,7 +83,11 @@ export default function CollegeCard({ college }: { college: College }) {
             </div>
           </div>
         </div>
+      </Link>
+
+      <div className="px-4 pb-4">
+        <CompareButton id={college.id} />
       </div>
-    </Link>
+    </div>
   )
 }
