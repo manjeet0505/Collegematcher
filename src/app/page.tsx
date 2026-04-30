@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import Navbar from '@/components/Navbar'
 import CollegeCard from '@/components/CollegeCard'
 import SearchFilters from '@/components/SearchFilters'
+import CompareBar from '@/components/CompareBar'
 import { PrismaClient } from '../generated/prisma'
 interface SearchParams {
   search?: string
@@ -195,6 +196,7 @@ export default async function HomePage({
         )}
 
       </div>
+      <CompareBar />  
     </div>
   )
 }
