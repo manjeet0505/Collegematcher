@@ -1,15 +1,84 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma" // only if you choose Option B
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String?
+  image         String?
+  createdAt     DateTime  @default(now())
+  savedColleges SavedCollege[]
+  savedComparisons SavedComparison[]
+}
+
+model College {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  location        String
+  city            String
+  state           String
+  type            String   // Private / Government / Deemed
+  rating          Float
+  totalFees       Int
+  establishedYear Int
+  imageUrl        String?
+  description     String
+  website         String?
+  placementAvg    Int
+  placementHighest Int
+  placementPercent Float
+  naacGrade       String
+  nirfRank        Int?
+  courses         Course[]
+  reviews         Review[]
+  savedBy         SavedCollege[]
+  createdAt       DateTime @default(now())
+}
+
+model Course {
+  id          String  @id @default(cuid())
+  name        String
+  duration    String
+  fees        Int
+  seats       Int
+  college     College @relation(fields: [collegeId], references: [id])
+  collegeId   String
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  author    String
+  rating    Float
+  comment   String
+  year      Int
+  college   College  @relation(fields: [collegeId], references: [id])
+  collegeId String
+  createdAt DateTime @default(now())
+}
+
+model SavedCollege {
+  id        String  @id @default(cuid())
+  user      User    @relation(fields: [userId], references: [id])
+  userId    String
+  college   College @relation(fields: [collegeId], references: [id])
+  collegeId String
+  createdAt DateTime @default(now())
+  @@unique([userId, collegeId])
+}
+
+model SavedComparison {
+  id         String   @id @default(cuid())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  collegeIds String[] 
+  createdAt  DateTime @default(now())
 }
